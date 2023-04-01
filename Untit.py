@@ -7,7 +7,7 @@ import sys
 import networkx as nx
 
 # Input file
-file = "/Users/d0m0l9x/Downloads/3_PG_supplier_dim_Extract_Load_NM.yxmd"
+file = "/Users/d0m0l9x/Downloads/samplefile.yxmd"   # provide the filename
 assert len(file.split('.')) > 1, 'Input file must have an extension'
 file_ext = file.split('.')[-1]
 assert file_ext == 'xml' or file_ext == 'yxmd', 'Input file must be .xml or .yxmd'
@@ -19,13 +19,13 @@ else:
     tree = ET.parse(file)
 # print(tree)
 # Output file
-output_file_name = "/Users/d0m0l9x/Downloads/kpi.csv"
+output_file_name = "/Users/d0m0l9x/Downloads/kpi.csv"  # provide output file name
 assert len(output_file_name.split('.')) > 1, 'Output file must have an extension'
 output_file_ext = output_file_name.split('.')[-1]
 assert output_file_ext == 'csv', 'Output file must be .csv'
 graph = nx.DiGraph()
 root = tree.getroot()
-print(root)
+# print(root)
 lst = []
 for x in root.iter('Node'):
    # print(x)
@@ -47,11 +47,11 @@ keys = lst[0].keys()
 # # print(graph)
 # print(lst)
 nx.draw(graph,with_labels = True)
-for node in graph:
-    # Generate a SQL query for each edge that points to this node
-    print("node --"+node)
-    for neighbor in graph[node]:
-        print("neighbour"+neighbor)
+# for node in graph:
+#     # Generate a SQL query for each edge that points to this node
+#     print("node --"+node)
+#     for neighbor in graph[node]:
+#         print("neighbour"+neighbor)
 
 # visited = set()
 
@@ -64,17 +64,11 @@ for node in graph:
 
 # dfs(29)
 plt.savefig("/Users/d0m0l9x/Downloads/filename.png")
-with open(output_file_name, 'w') as output_file:
-    dict_writer = csv.DictWriter(output_file, keys)
-    dict_writer.writeheader()
-    dict_writer.writerows(lst)
+# with open(output_file_name, 'w') as output_file:
+#     dict_writer = csv.DictWriter(output_file, keys)
+#     dict_writer.writeheader()
+#     dict_writer.writerows(lst)
 
-def create_dict_with_all_keys(d, key):
-    new_dict = {}
-    for k in d:
-        if k == "Tool ID" and d[k] == key:
-            new_dict[k] = d[k]
-    return new_dict
 
 mst=[]
 for node in nx.algorithms.topological_sort(graph):
@@ -84,8 +78,8 @@ for node in nx.algorithms.topological_sort(graph):
 
 # print(mst)
 
-with open("/Users/d0m0l9x/Downloads/mstt.csv", 'w') as output_file:
-    dict_writer = csv.DictWriter(output_file, mst[0].keys())
+with open(output_file_name, 'w') as output_file:
+    dict_writer = csv.DictWriter(output_file, keys())
     dict_writer.writeheader()
     dict_writer.writerows(mst)
 
