@@ -6,26 +6,29 @@ from shutil import copyfile
 import sys
 import networkx as nx
 
-# Input file
-file = "/Users/d0m0l9x/Downloads/samplefile.yxmd"   # provide the filename
+# FY_Extract_Load_bq_1.0.yxmd
+# ForestCDP-PRODLoad-NoData.yxmd
+
+# Input file WMSIDWH_KPI_Response_Fact_Load.yxmd
+file = "/Users/dilli/Downloads/ForestCDP-PRODLoad-NoData.yxmd"    # yxmd filename
 assert len(file.split('.')) > 1, 'Input file must have an extension'
 file_ext = file.split('.')[-1]
 assert file_ext == 'xml' or file_ext == 'yxmd', 'Input file must be .xml or .yxmd'
 if file_ext == 'yxmd':
     xml = file.split('.')[0] + '.xml'
-    copyfile(file, xml)
+    # copyfile(file, xml)
     tree = ET.parse(xml)
 else:
     tree = ET.parse(file)
 # print(tree)
 # Output file
-output_file_name = "/Users/d0m0l9x/Downloads/kpi.csv"  # provide output file name
+output_file_name = "/Users/dilli/Downloads/kpi.csv"            # output file name
 assert len(output_file_name.split('.')) > 1, 'Output file must have an extension'
 output_file_ext = output_file_name.split('.')[-1]
 assert output_file_ext == 'csv', 'Output file must be .csv'
 graph = nx.DiGraph()
 root = tree.getroot()
-# print(root)
+print(root)
 lst = []
 for x in root.iter('Node'):
    # print(x)
@@ -35,7 +38,7 @@ for x in root.iter('Node'):
     # print(node)
     
 
-for connection in root.iter('Connection'):
+for connection in root.find('Connections').iter('Connection'):
     
     connected_tool_id = connection.find('Origin').attrib.get('ToolID')
     # print("orig"+connected_tool_id)
@@ -47,11 +50,11 @@ keys = lst[0].keys()
 # # print(graph)
 # print(lst)
 nx.draw(graph,with_labels = True)
-# for node in graph:
-#     # Generate a SQL query for each edge that points to this node
-#     print("node --"+node)
-#     for neighbor in graph[node]:
-#         print("neighbour"+neighbor)
+for node in graph:
+    # Generate a SQL query for each edge that points to this node
+    print("node --"+node)
+    for neighbor in graph[node]:
+        print("neighbour"+neighbor)
 
 # visited = set()
 
@@ -63,12 +66,18 @@ nx.draw(graph,with_labels = True)
 #             dfs(neighbor)
 
 # dfs(29)
-plt.savefig("/Users/d0m0l9x/Downloads/filename.png")
+plt.savefig("/Users/dilli/Downloads/filename.png")   #  provide dag name
 # with open(output_file_name, 'w') as output_file:
 #     dict_writer = csv.DictWriter(output_file, keys)
 #     dict_writer.writeheader()
 #     dict_writer.writerows(lst)
 
+def create_dict_with_all_keys(d, key):
+    new_dict = {}
+    for k in d:
+        if k == "Tool ID" and d[k] == key:
+            new_dict[k] = d[k]
+    return new_dict
 
 mst=[]
 for node in nx.algorithms.topological_sort(graph):
@@ -78,8 +87,8 @@ for node in nx.algorithms.topological_sort(graph):
 
 # print(mst)
 
-with open(output_file_name, 'w') as output_file:
-    dict_writer = csv.DictWriter(output_file, keys())
+with open("/Users/dilli/Downloads/mstt.csv", 'w') as output_file:
+    dict_writer = csv.DictWriter(output_file, mst[0].keys())
     dict_writer.writeheader()
     dict_writer.writerows(mst)
 
