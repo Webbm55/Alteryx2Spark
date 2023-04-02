@@ -170,7 +170,7 @@ class NodeElement(object):
 
 
 
-        elif not self.plugin:
+        elif (not self.plugin) or (self.plugin == 'AlteryxGuiToolkit.ToolContainer.ToolContainer' and node.find('Properties').find('Configuration').find('Caption').text == 'Delta tool - DO NOT MODIFY'):
             self.delta =  node \
                 .find('Properties') \
                 .find('Configuration') \
@@ -184,15 +184,16 @@ class NodeElement(object):
                         if(m.endswith("True") and c==0):
                             print(m.split("=")[0])
                             self.deltaquery = self.deltaquery+"\""+m.split("=")[0] +"\","
-                    self.sparkquery = "val df"+self.tool_id +"_new=ldfs.as(\"a\").join(rdfs.as(\"b\"), Seq("  +  self.deltaquery[:-1] +"),\"left anti\")"
+                    self.sparkquery = "val df"+self.tool_id +"_new=ldfs.as(\"a\").join(rdfs.as(\"b\"), Seq("  +  self.deltaquery[:-1] +"),\"left anti\")\n"
+                    self.sparkquery =  self.sparkquery  + "val df"+self.tool_id +"_delete=rdfs.as(\"a\").join(ldfs.as(\"b\"), Seq("  +  self.deltaquery[:-1] +"),\"left anti\")\n"
                     self.sparkquery = self.sparkquery  + "\n val df"+self.tool_id +"_change=ldfs.as(\"a\").join(rdfs.as(\"b\"), Seq("  +  self.deltaquery[:-1] +"),\"inner\")"
                     c=1
                 else:
                     self.deltaquery=""
                     for m in field.text.split(","):
                         if(m.endswith("True") and c==1):
-                            self.deltaquery =  self.deltaquery+".where(coalesce(col(\"a."+m.split("=")[0] +", lit(\"\"))=!= coalesce(col(\"b."+m.split("=")[0] +", lit(\"\"))"
-                    self.sparkquery = self.sparkquery + self.deltaquery
+                            self.deltaquery =  self.deltaquery+"coalesce(col(\"a."+m.split("=")[0] +"\"), lit(\"\"))=!= coalesce(col(\"b."+m.split("=")[0] +"\"), lit(\"\")) or "
+                    self.sparkquery = self.sparkquery +".where("+ self.deltaquery[:-3]+")"
 
         
         else:
@@ -214,36 +215,42 @@ class NodeElement(object):
         self.description = self.description.replace('\n', ' ') if self.description else None
         
         
-        for connection in root.iter('Connection'):
+        for connection in root.find('Connections').iter('Connection'):
              dest = connection.find('Destination').attrib.get('ToolID')
              if(dest==self.tool_id):
                  origin = connection.find('Origin').attrib.get('ToolID')
                  if(origin and connection.find('Destination').attrib.get('Connection')=='Left'):
-                     print("connect="+origin)
+                     print("1origin="+origin+"dest = "+dest) 
                      self.sparkquery = self.sparkquery.replace('ldfs', 'df'+origin) if self.sparkquery else None
                  if(origin and connection.find('Destination').attrib.get('Connection')=='Right'):
-                     print("connect="+origin)
+                     print("2origin="+origin+"dest = "+dest) 
                      self.sparkquery = self.sparkquery.replace('rdfs', 'df'+origin) if self.sparkquery else None
                  if(origin and connection.find('Destination').attrib.get('Connection')=='New Records'):
-                     print("connect="+origin)
+                     print("3origin="+origin+"dest = "+dest) 
                      self.sparkquery = self.sparkquery.replace('ldfs', 'df'+origin+'_new') if self.sparkquery else None
                  if(origin and connection.find('Destination').attrib.get('Connection')=='Changed Records'):
-                     print("connect="+origin)
+                     print("4origin="+origin+"dest = "+dest) 
                      self.sparkquery = self.sparkquery.replace('rdfs', 'df'+origin+'_change') if self.sparkquery else None
                  if(origin and connection.find('Destination').attrib.get('Connection')=='New Data Stream'):
-                     print("connect="+origin)
+                     print("5origin="+origin+"dest = "+dest) 
                      self.sparkquery = self.sparkquery.replace('ldfs', 'df'+origin) if self.sparkquery else None
                  if(origin and connection.find('Destination').attrib.get('Connection')=='Old Data Stream'):
-                     print("connect="+origin)
+                     print("6origin="+origin+"dest = "+dest) 
                      self.sparkquery = self.sparkquery.replace('rdfs', 'df'+origin) if self.sparkquery else None
                  if(origin and connection.find('Origin').attrib.get('Connection')=='New Records'):
-                     print("connect="+origin)
+                     print("7origin="+origin+"dest = "+dest) 
                      self.sparkquery = self.sparkquery.replace('df.', 'df'+origin+'_new.') if self.sparkquery else None
                  if(origin and connection.find('Origin').attrib.get('Connection')=='Changed Records'):
-                     print("connect="+origin)
+                     print("8origin="+origin+"dest = "+dest) 
                      self.sparkquery = self.sparkquery.replace('df.', 'df'+origin+'_change.') if self.sparkquery else None
+                 if(origin and connection.attrib.get('name')=='#1'):
+                     print("1origin="+origin+"dest = "+dest) 
+                     self.sparkquery = self.sparkquery.replace('ldfs', 'df'+origin) if self.sparkquery else None
+                 if(origin and connection.attrib.get('name')=='#2'):
+                     print("2origin="+origin+"dest = "+dest) 
+                     self.sparkquery = self.sparkquery.replace('rdfs', 'df'+origin) if self.sparkquery else None
                  if(origin):
-                     print("connect="+origin)
+                     print("9origin="+origin+"dest = "+dest) 
                      self.sparkquery = self.sparkquery.replace('df.', 'df'+origin+'.') if self.sparkquery else None
                  
 
