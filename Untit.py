@@ -6,11 +6,13 @@ from shutil import copyfile
 import sys
 import networkx as nx
 
-# FY_Extract_Load_bq_1.0.yxmd
-# ForestCDP-PRODLoad-NoData.yxmd
+#provide below three names
 
-# Input file WMSIDWH_KPI_Response_Fact_Load.yxmd
-file = "/Users/dilli/Downloads/ForestCDP-PRODLoad-NoData.yxmd"    # yxmd filename
+file = "/Users/dilli/Downloads/alteryxname.yxmd"    # yxmd filename
+output_file_name = "/Users/dilli/Downloads/outputname.csv"             # output file name
+dag_name = "/Users/dilli/Downloads/dagname.png"                 # Dag Nam
+
+
 assert len(file.split('.')) > 1, 'Input file must have an extension'
 file_ext = file.split('.')[-1]
 assert file_ext == 'xml' or file_ext == 'yxmd', 'Input file must be .xml or .yxmd'
@@ -19,10 +21,7 @@ if file_ext == 'yxmd':
     # copyfile(file, xml)
     tree = ET.parse(xml)
 else:
-    tree = ET.parse(file)
-# print(tree)
-# Output file
-output_file_name = "/Users/dilli/Downloads/kpi.csv"            # output file name
+    tree = ET.parse(file)      
 assert len(output_file_name.split('.')) > 1, 'Output file must have an extension'
 output_file_ext = output_file_name.split('.')[-1]
 assert output_file_ext == 'csv', 'Output file must be .csv'
@@ -31,53 +30,16 @@ root = tree.getroot()
 print(root)
 lst = []
 for x in root.iter('Node'):
-   # print(x)
     node = NodeElement(x,root)
     lst.append(node.data)
     graph.add_node(node.data['Tool ID'])
-    # print(node)
     
 
 for connection in root.find('Connections').iter('Connection'):
     
     connected_tool_id = connection.find('Origin').attrib.get('ToolID')
-    # print("orig"+connected_tool_id)
-    # print("dest"+connection.find('Destination').attrib.get('ToolID'))
     graph.add_edge(connected_tool_id, connection.find('Destination').attrib.get('ToolID'))
 
-keys = lst[0].keys()
-# print(keys)
-# # print(graph)
-# print(lst)
-nx.draw(graph,with_labels = True)
-for node in graph:
-    # Generate a SQL query for each edge that points to this node
-    print("node --"+node)
-    for neighbor in graph[node]:
-        print("neighbour"+neighbor)
-
-# visited = set()
-
-# def dfs(node):
-#     visited.add(node)
-#     print(node)
-#     for neighbor in graph.neighbors(node):
-#         if neighbor not in visited:
-#             dfs(neighbor)
-
-# dfs(29)
-plt.savefig("/Users/dilli/Downloads/filename.png")   #  provide dag name
-# with open(output_file_name, 'w') as output_file:
-#     dict_writer = csv.DictWriter(output_file, keys)
-#     dict_writer.writeheader()
-#     dict_writer.writerows(lst)
-
-def create_dict_with_all_keys(d, key):
-    new_dict = {}
-    for k in d:
-        if k == "Tool ID" and d[k] == key:
-            new_dict[k] = d[k]
-    return new_dict
 
 mst=[]
 for node in nx.algorithms.topological_sort(graph):
@@ -85,14 +47,33 @@ for node in nx.algorithms.topological_sort(graph):
     # print(int(node))
     mst = mst + ([d for d in lst if int(d.get('Tool ID')) == int(node)])
 
-# print(mst)
+G = nx.DiGraph()
 
-with open("/Users/dilli/Downloads/mstt.csv", 'w') as output_file:
+for connection in root.find('Connections').findall('Connection'):
+    origin_tool_id = connection.find('Origin').attrib['ToolID']
+    destination_tool_id = connection.find('Destination').attrib['ToolID']
+    G.add_edge(origin_tool_id, destination_tool_id)
+
+
+pos = nx.spring_layout(nx.algorithms.topological_sort(graph), seed=142)
+for node_data in lst:
+    tool_id = node_data['Tool ID']
+    x = node_data.get('x')  
+    y = node_data.get('y')
+    if x is not None and y is not None:
+        pos[tool_id] = (int(x), int(y))
+plt.figure(figsize=(60, 20))
+nx.draw(G, pos, with_labels=True, node_size=1000, node_color='skyblue', font_size=10, font_color='black', font_weight='bold', arrowsize=20)
+
+edge_labels = {(u, v): v for u, v in G.edges}
+nx.draw_networkx_edge_labels(G, pos, edge_labels=edge_labels, font_color='red')
+
+plt.title("Directed Acyclic Graph (DAG)")
+
+plt.savefig(dag_name, format='png', bbox_inches='tight')
+
+with open(output_file_name, 'w') as output_file:
     dict_writer = csv.DictWriter(output_file, mst[0].keys())
     dict_writer.writeheader()
     dict_writer.writerows(mst)
 
-
-
-# FY_Extract_Load_bq_1.0.yxmd
-# ForestCDP-PRODLoad-NoData.yxmd
