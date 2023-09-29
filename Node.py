@@ -31,13 +31,14 @@ class NodeElement(object):
             for field in rjoin_data.findall('Field'):
                 self.rjoin_fields.append(field.attrib['field'])
                 rj = rj + "," + field.attrib['field']
+            join_type = "inner"
             joinstr =""
             for i in range(0,len(self.ljoin_fields)) :
                 joinstr=joinstr+"ldfs(\""+self.ljoin_fields[i] + "\")===rdfs(\""+self.rjoin_fields[i]+ "\"),"
                 
 
             self.query = "select * from " + lj + rj
-            self.sparkquery = "val df"+self.tool_id+" = ldfs.join(rdfs," +joinstr[:-1] + ",inner)"
+            self.sparkquery = "val df" + self.tool_id + " = ldfs.join(rdfs," + joinstr[:-1] + f",{join_type})"
 
         
 
@@ -46,8 +47,26 @@ class NodeElement(object):
                 .find('Properties') \
                 .find('Configuration') \
                 .find('Caption').text
-
+            
         
+        elif self.plugin == 'AlteryxSpatialPluginsGui.Summarize.Summarize':
+            self.summarize_fields = node \
+                .find('Properties') \
+                .find('Configuration') \
+                .find('SummarizeFields')
+            self.summarize_fields = [field.attrib for field in self.summarize_fields]
+            group_by = []
+            aggregations = []
+            for field in self.summarize_fields:
+                if field['action'] == 'GroupBy':
+                    group_by.append("\""+ field['field'] + "\"")
+                elif field['action'] == 'Sum':
+                    aggregations.append(f'sum(\"{field["field"]}\").alias(\"{field["rename"]}\")')
+            group_by_clause = ', '.join(group_by)
+            aggregation_clause = ', '.join(aggregations)
+            self.sparkquery = f"val df{self.tool_id} = df.groupBy({', '.join(group_by)}).agg({', '.join(aggregations)})"
+
+
 
         elif self.plugin == 'AlteryxBasePluginsGui.AlteryxSelect.AlteryxSelect':
             self.select_fields = node \
@@ -85,9 +104,9 @@ class NodeElement(object):
                 if 'IF' in e['expression']:
                     filt = filt + ".withColumn(\""+e['field']+"\",expr(\""+e['expression'].replace('\"', '\'').replace('ENDIF'," end ").replace('ELSEIF'," when ").replace('IF',"case when ").replace('[',' ').replace(']',' ') + "\"))"
                 elif (e['type']=='V_WString'):
-                    filt = filt + ".withColumn(\""+e['field']+"\",lit(\""+e['expression'] + "\"))"
+                    filt = filt + ".withColumn(\""+e['field']+"\",lit(\""+e['expression'].replace('[','').replace(']','') + "\"))"
                 else:
-                    filt = filt + ".withColumn(\"" + e['field']+"\",lit("+e['expression'] + "))"
+                    filt = filt + ".withColumn(\"" + e['field']+"\",lit("+e['expression'].replace('[','').replace(']','')  + "))"
 
             self.sparkquery = "val df"+self.tool_id+" = df"+filt.replace('\n', ' ')
 
@@ -154,8 +173,9 @@ class NodeElement(object):
                 .find('Properties') \
                 .find('Annotation') \
                 .find('DefaultAnnotationText').text
-
-            self.sparkquery = "val df"+self.tool_id+" = df.where(\"" + self.filter_fields+ "\")"
+            
+            cond = self.filter_fields.replace('[','').replace(']','').replace(' = ',' == ').replace('"','\'')
+            self.sparkquery = "val df"+self.tool_id+" = df.where(\"" +cond+  "\")"
 
         # else:
         #     self.select_fields = None
@@ -166,11 +186,29 @@ class NodeElement(object):
             self.sparkquery = "df.write.format().save()"
         
         elif self.plugin == 'AlteryxBasePluginsGui.DbFileInput.DbFileInput':
-            self.sparkquery = "val df"+self.tool_id +"= spark.read.format()"
+            self.filter_fields = node \
+                .find('Properties') \
+                .find('Configuration') \
+                .find('File')
+            if self.filter_fields is not None:
+                file_content = self.filter_fields.text
+                query = file_content.split('|||')[1] if '|||' in file_content else ''
+                self.sparkquery = f'val df{self.tool_id} = spark.read.format("jdbc").option("url", "jdbc:odbc:DSN=PROJECT_SQL").option("dbtable", "{query}").load()'
+            else:
+                self.sparkquery = f'val df{self.tool_id} = spark.read.format("jdbc").load()'
+
+
+        elif self.plugin == 'AlteryxBasePluginsGui.TextInput.TextInput':
+            self.sparkquery = f'val df{self.tool_id} = spark.read.format("text").load()'
+
+
+        
+        elif self.plugin == 'AlteryxBasePluginsGui.BrowseV2.BrowseV2':
+            self.sparkquery = "val df"+self.tool_id +".show()"
 
 
 
-        elif (not self.plugin) or (self.plugin == 'AlteryxGuiToolkit.ToolContainer.ToolContainer' and node.find('Properties').find('Configuration').find('Caption').text == 'Delta tool - DO NOT MODIFY'):
+        elif  (self.plugin == 'AlteryxGuiToolkit.ToolContainer.ToolContainer' and node.find('Properties').find('Configuration').find('Caption').text == 'Delta tool - DO NOT MODIFY'):
             self.delta =  node \
                 .find('Properties') \
                 .find('Configuration') \
@@ -209,7 +247,11 @@ class NodeElement(object):
                 self.description = None
 
 
-
+        # if(self.sparkquery == ""):
+        #        self.sparkquery= "val df"+self.tool_id + "=df."
+        # else:
+        #         self.sparkquery
+        
 
 
         self.description = self.description.replace('\n', ' ') if self.description else None
@@ -250,13 +292,17 @@ class NodeElement(object):
                      print("2origin="+origin+"dest = "+dest) 
                      self.sparkquery = self.sparkquery.replace('rdfs', 'df'+origin) if self.sparkquery else None
                  if(origin):
+                     if(self.sparkquery == ""):
+                        self.sparkquery= "val df"+self.tool_id + "=df."
+                     else:
+                        self.sparkquery
                      print("9origin="+origin+"dest = "+dest) 
                      self.sparkquery = self.sparkquery.replace('df.', 'df'+origin+'.') if self.sparkquery else None
                  
 
 
 
-        
+
 
         self.data = {
             'Tool ID': self.tool_id,
@@ -269,5 +315,5 @@ class NodeElement(object):
             'Right Join Fields': self.rjoin_fields,
             'Select Fields': self.select_fields,
             # 'Query':  self.query.replace("\"\"","\"").replace("\"v","v"),
-            'Spark Query':self.sparkquery
+            'Spark Query': self.sparkquery
         }
