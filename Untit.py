@@ -8,9 +8,9 @@ import networkx as nx
 
 #provide below three names
 
-file = "/Users/dilli/Downloads/alteryxname.yxmd"    # yxmd filename
-output_file_name = "/Users/dilli/Downloads/outputname.csv"             # output file name
-dag_name = "/Users/dilli/Downloads/dagname.png"                 # Dag Nam
+file = "Step 1.xml"    # yxmd filename (only .xml working?)
+output_file_name = "outputname.csv"             # output file name
+dag_name = "dagname.png"                 # Dag Nam
 
 
 assert len(file.split('.')) > 1, 'Input file must have an extension'
@@ -72,7 +72,7 @@ plt.title("Directed Acyclic Graph (DAG)")
 
 plt.savefig(dag_name, format='png', bbox_inches='tight')
 
-with open(output_file_name, 'w') as output_file:
+with open(output_file_name, 'w', newline='') as output_file:
     dict_writer = csv.DictWriter(output_file, mst[0].keys())
     dict_writer.writeheader()
     dict_writer.writerows(mst)
