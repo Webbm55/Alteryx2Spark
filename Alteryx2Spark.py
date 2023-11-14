@@ -8,13 +8,13 @@ import networkx as nx
 
 
 # Ask the user for the filename
-file = input("Please enter the filename: ")  # User provides the filename
-file = "input\\" + file   # Assuming the file is in the 'input' directory
+fileinput = input("Please enter the filename and extension: ")  # User provides the filename
+file = "input\\" + fileinput   # Assuming the file is in the 'input' directory
 
 #provide below two names
-
-output_file_name = "output\\outputname.csv"            # output file name
-dag_name = "output\\dagname.png"                # Dag Nam
+filename = fileinput.split(".")[0]
+output_file_name = "output\\" + filename + ".csv"            # output file name
+dag_name = "output\\" + filename + ".png"                # Dag Nam
 
 
 assert len(file.split('.')) > 1, 'Input file must have an extension'
