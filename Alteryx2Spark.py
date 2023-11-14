@@ -8,9 +8,9 @@ import networkx as nx
 
 #provide below three names
 
-file = "Step 1.xml"    # yxmd filename (only .xml working?)
-output_file_name = "outputname.csv"             # output file name
-dag_name = "dagname.png"                 # Dag Nam
+file = "input\VAS Targerts.xml"    # yxmd filename (only .xml working?)
+output_file_name = "output\outputname.csv"             # output file name
+dag_name = "output\dagname.png"                 # Dag Nam
 
 
 assert len(file.split('.')) > 1, 'Input file must have an extension'
