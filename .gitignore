@@ -5,3 +5,4 @@
 # ignore ALL files in ANY directory named temp
 output/
 input/
+__pycache__/
