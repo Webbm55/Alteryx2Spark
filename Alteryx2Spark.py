@@ -6,9 +6,13 @@ from shutil import copyfile
 import sys
 import networkx as nx
 
-#provide below three names
 
-file = "input\\VAS Targets.xml"   # yxmd filename (only .xml working?)
+# Ask the user for the filename
+file = input("Please enter the filename: ")  # User provides the filename
+file = "input\\" + file   # Assuming the file is in the 'input' directory
+
+#provide below two names
+
 output_file_name = "output\\outputname.csv"            # output file name
 dag_name = "output\\dagname.png"                # Dag Nam
 
