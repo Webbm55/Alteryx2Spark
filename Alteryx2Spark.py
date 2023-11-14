@@ -8,7 +8,7 @@ import networkx as nx
 
 
 # Ask the user for the filename
-fileinput = input("Please enter the filename and extension: ")  # User provides the filename
+fileinput = input("Please enter the filename with extension: ")  # User provides the filename
 file = "input\\" + fileinput   # Assuming the file is in the 'input' directory
 
 #provide below two names
