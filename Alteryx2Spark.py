@@ -14,7 +14,7 @@ file = "input\\" + fileinput   # Assuming the file is in the 'input' directory
 #provide below two names
 filename = fileinput.split(".")[0]
 output_file_name = "output\\" + filename + ".csv"            # output file name
-dag_name = "output\\" + filename + ".png"                # Dag Nam
+dag_name = "output\\" + filename + ".png"                   # Dag Nam
 
 
 assert len(file.split('.')) > 1, 'Input file must have an extension'
