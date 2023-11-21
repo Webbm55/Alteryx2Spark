@@ -24,7 +24,7 @@ for x in os.listdir(input_directory):  # Loop through the files in the directory
         assert file_ext == 'xml' or file_ext == 'yxmd', 'Input file must be .xml or .yxmd'
         if file_ext == 'yxmd':
             xml = file.split('.')[0] + '.xml'
-            # copyfile(file, xml)
+            copyfile(file, xml)
             tree = ET.parse(xml)
         else:
             tree = ET.parse(file)      

@@ -22,7 +22,7 @@ file_ext = file.split('.')[-1]
 assert file_ext == 'xml' or file_ext == 'yxmd', 'Input file must be .xml or .yxmd'
 if file_ext == 'yxmd':
     xml = file.split('.')[0] + '.xml'
-    # copyfile(file, xml)
+    copyfile(file, xml)
     tree = ET.parse(xml)
 else:
     tree = ET.parse(file)      
