@@ -13,6 +13,8 @@ for x in os.listdir(input_directory):  # Loop through the files in the directory
     if x.endswith(".xml") or x.endswith(".yxmd"):  # Check for xml or yxmd files
         filepath = input_directory + x  # Full path to the file
 
+        print("Start " + filepath)
+        
         filename = x.split(".")[0]
         output_file_name = "output\\" + filename + ".csv"            # output file name
         dag_name = "output\\" + filename + ".png"                # Dag Nam
@@ -33,7 +35,7 @@ for x in os.listdir(input_directory):  # Loop through the files in the directory
         assert output_file_ext == 'csv', 'Output file must be .csv'
         graph = nx.DiGraph()
         root = tree.getroot()
-        print(root)
+        #print(root)
         lst = []
         for x in root.iter('Node'):
             node = NodeElement(x,root)
@@ -82,3 +84,5 @@ for x in os.listdir(input_directory):  # Loop through the files in the directory
             dict_writer = csv.DictWriter(output_file, mst[0].keys())
             dict_writer.writeheader()
             dict_writer.writerows(mst)
+        
+        print("End " + filepath)
