@@ -27,6 +27,7 @@ for x in os.listdir(input_directory):  # Loop through the files in the directory
         if file_ext == 'yxmd':
             xml = file.split('.')[0] + '.xml'
             copyfile(file, xml)
+            os.remove(file)
             tree = ET.parse(xml)
         else:
             tree = ET.parse(file)      
